@@ -88,9 +88,6 @@ wth npm run build
 
 # Example 2: Exploring a non-existent directory
 wth ls /fake/directory
-
-# Run the interactive provider setup
-wth --setup
 ```
 
 If the command succeeds, it will gracefully exit just like normally.
