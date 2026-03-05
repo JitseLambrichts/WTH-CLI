@@ -131,8 +131,8 @@ fn main() {
 
     if args.is_empty() {
         println!(
-            "\n  {} – run any command; if it fails, AI tells you why.\n\n  {}  wth <command>\n  {} wth npm run build\n  {} wth --setup\n",
-            "wth".bold().cyan(),
+            "\n  {} – run any command; if it fails, AI tells you why.\n\n  {}  wtf <command>\n  {} wtf npm run build\n  {} wtf --setup\n",
+            "wtf".bold().cyan(),
             "Usage:".dimmed(),
             "Example:".dimmed(),
             "Setup:".dimmed(),
@@ -201,7 +201,7 @@ fn main() {
             .unwrap()
             .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏ "),
     );
-    spinner.set_message("wth is analyzing the error…".cyan().to_string());
+    spinner.set_message("wtf is analyzing the error…".cyan().to_string());
     spinner.enable_steady_tick(std::time::Duration::from_millis(80));
 
     let files = extract_existing_files(&stderr_output);
@@ -216,7 +216,7 @@ fn main() {
         println!(
             "\n{}\n{} {}\n",
             separator,
-            "🤖 wth says".bold().cyan(),
+            "🤖 wtf says".bold().cyan(),
             format!("({}):", provider).dimmed(),
         );
         termimad::print_text(&answer);
@@ -334,7 +334,7 @@ fn build_prompt(cmd: &str, stderr: &str, files_context: &str) -> String {
 fn run_setup() {
     println!(
         "\n{}",
-        "🔧 wth setup".bold().cyan()
+        "🔧 wtf setup".bold().cyan()
     );
     println!(
         "{}\n",
@@ -375,8 +375,8 @@ fn run_setup() {
     let env_path = ".env";
     let mut contents = fs::read_to_string(env_path).unwrap_or_default();
 
-    // Update WTH_PROVIDER
-    contents = update_env_var(&contents, "WTH_PROVIDER", provider_name);
+    // Update WTF_PROVIDER
+    contents = update_env_var(&contents, "WTF_PROVIDER", provider_name);
 
     let mut selected_ollama_model = None;
 
@@ -555,7 +555,7 @@ fn update_env_var(contents: &str, key: &str, value: &str) -> String {
 
 // ── AI provider selection ────────────────────────────────────────────
 fn get_ai_response(prompt: &str) -> Option<(String, String)> {
-    let provider = env::var("WTH_PROVIDER")
+    let provider = env::var("WTF_PROVIDER")
         .unwrap_or_default()
         .to_lowercase();
 
@@ -635,7 +635,7 @@ fn get_ai_response(prompt: &str) -> Option<(String, String)> {
     println!(
         "\n{}\n\n  {}\n\n  {}\n  Install from {} then run:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n",
         "✖ No AI provider available.".red(),
-        "Run 'wth --setup' to configure a provider.".bold().cyan(),
+        "Run 'wtf --setup' to configure a provider.".bold().cyan(),
         "Option 1 – Ollama (local, free, private)".bold(),
         "https://ollama.com".underline(),
         "ollama pull qwen3.5:4b".cyan(),

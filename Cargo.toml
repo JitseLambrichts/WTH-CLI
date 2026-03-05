@@ -1,5 +1,5 @@
 [package]
-name = "wth-cli"
+name = "wtf-cli"
 version = "1.0.0"
 edition = "2021"
 description = "Run any command. If it fails, AI tells you why and how to fix it."
@@ -7,7 +7,7 @@ license = "MIT"
 keywords = ["cli", "terminal", "error", "ai", "fix", "debug", "ollama", "developer-tools"]
 
 [[bin]]
-name = "wth"
+name = "wtf"
 path = "src/main.rs"
 
 [dependencies]
