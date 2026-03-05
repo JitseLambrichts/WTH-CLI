@@ -55,6 +55,12 @@
 
    _To make this permanent, add it to your [PowerShell Profile](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles) or use the 'Environment Variables' GUI._
 
+4. Configure your preferred AI provider:
+
+   ```bash
+   wth --setup
+   ```
+
 ## Updating
 
 If you've installed `wth-cli` from source and want to pull the latest changes:
@@ -82,6 +88,9 @@ wth npm run build
 
 # Example 2: Exploring a non-existent directory
 wth ls /fake/directory
+
+# Run the interactive provider setup
+wth --setup
 ```
 
 If the command succeeds, it will gracefully exit just like normally.
@@ -89,8 +98,9 @@ If it fails, `wth` will capture the error output, send it to the configured AI, 
 
 ## Configuration
 
-`wth-cli` attempts to connect to local Ollama by default, but it can be customized.
-You can create a `.env` file in the directory where you run the tool. A template is provided in `.env.example`:
+You can easily configure your preferred AI provider by running `wth --setup`. This command will present an interactive menu allowing you to choose between Ollama, OpenAI, Gemini, and OpenRouter using your arrow keys. It will automatically create or update a `.env` file in the current directory with your selection.
+
+Alternatively, you can manually create a `.env` file in the directory where you run the tool. A template is provided in `.env.example`:
 
 ```bash
 cp .env.example .env
@@ -99,6 +109,10 @@ cp .env.example .env
 Or set these Environment Variables globally:
 
 ```env
+# AI Provider (auto-detected if not set)
+# Options: ollama, openai, gemini, openrouter
+WTH_PROVIDER=ollama
+
 # Ollama (Default provider)
 OLLAMA_MODEL=qwen3.5:9b
 OLLAMA_HOST=http://localhost:11434

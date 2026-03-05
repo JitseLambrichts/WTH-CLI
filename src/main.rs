@@ -1,7 +1,9 @@
 use colored::Colorize;
+use dialoguer::{Select, theme::ColorfulTheme};
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use std::env;
+use std::fs;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::thread;
@@ -101,11 +103,18 @@ fn main() {
 
     if args.is_empty() {
         println!(
-            "\n  {} – run any command; if it fails, AI tells you why.\n\n  {}  wth <command>\n  {} wth npm run build\n",
+            "\n  {} – run any command; if it fails, AI tells you why.\n\n  {}  wth <command>\n  {} wth npm run build\n  {} wth --setup\n",
             "wth".bold().cyan(),
             "Usage:".dimmed(),
             "Example:".dimmed(),
+            "Setup:".dimmed(),
         );
+        std::process::exit(0);
+    }
+
+    // ── Setup mode ───────────────────────────────────────────────────
+    if args.len() == 1 && args[0] == "--setup" {
+        run_setup();
         std::process::exit(0);
     }
 
@@ -219,32 +228,206 @@ fn build_prompt(cmd: &str, stderr: &str) -> String {
     )
 }
 
+// ── Setup ────────────────────────────────────────────────────────────
+fn run_setup() {
+    println!(
+        "\n{}",
+        "🔧 wth setup".bold().cyan()
+    );
+    println!(
+        "{}\n",
+        "Select your preferred AI provider:".dimmed()
+    );
+
+    let providers = &[
+        "Ollama    – Local, free, and private (requires Ollama installed)",
+        "OpenAI    – Cloud (requires OPENAI_API_KEY)",
+        "Gemini    – Cloud (requires GEMINI_API_KEY)",
+        "OpenRouter – Cloud (requires OPENROUTER_API_KEY)",
+    ];
+
+    let selection = Select::with_theme(&ColorfulTheme::default())
+        .items(providers)
+        .default(0)
+        .interact();
+
+    let selection = match selection {
+        Ok(s) => s,
+        Err(_) => {
+            println!("\n{}", "Setup cancelled.".yellow());
+            return;
+        }
+    };
+
+    let provider_name = match selection {
+        0 => "ollama",
+        1 => "openai",
+        2 => "gemini",
+        3 => "openrouter",
+        _ => unreachable!(),
+    };
+
+    // Read existing .env or start fresh
+    let env_path = ".env";
+    let mut contents = fs::read_to_string(env_path).unwrap_or_default();
+
+    // Update or add WTH_PROVIDER
+    if contents.contains("WTH_PROVIDER=") {
+        let new_contents: Vec<String> = contents
+            .lines()
+            .map(|line| {
+                if line.starts_with("WTH_PROVIDER=") {
+                    format!("WTH_PROVIDER={}", provider_name)
+                } else {
+                    line.to_string()
+                }
+            })
+            .collect();
+        contents = new_contents.join("\n");
+        if !contents.ends_with('\n') {
+            contents.push('\n');
+        }
+    } else {
+        if !contents.is_empty() && !contents.ends_with('\n') {
+            contents.push('\n');
+        }
+        contents.push_str(&format!("\nWTH_PROVIDER={}\n", provider_name));
+    }
+
+    if let Err(e) = fs::write(env_path, &contents) {
+        eprintln!(
+            "\n{} {}",
+            "✖ Could not write .env:".red(),
+            e.to_string().red()
+        );
+        return;
+    }
+
+    let display_name = match selection {
+        0 => "Ollama",
+        1 => "OpenAI",
+        2 => "Gemini",
+        3 => "OpenRouter",
+        _ => unreachable!(),
+    };
+
+    println!(
+        "\n{} {} {}",
+        "✔".green().bold(),
+        "Provider set to".bold(),
+        display_name.cyan().bold()
+    );
+
+    // Show provider-specific instructions
+    match selection {
+        0 => {
+            println!(
+                "\n  {}\n  {}\n",
+                "Make sure Ollama is running and you have a model pulled:".dimmed(),
+                "ollama pull qwen3.5:9b".cyan()
+            );
+        }
+        1 => {
+            if env::var("OPENAI_API_KEY").is_err() {
+                println!(
+                    "\n  {}\n  {}\n",
+                    "Add your API key to .env:".dimmed(),
+                    "OPENAI_API_KEY=sk-...".cyan()
+                );
+            }
+        }
+        2 => {
+            if env::var("GEMINI_API_KEY").is_err() {
+                println!(
+                    "\n  {}\n  {}\n",
+                    "Add your API key to .env:".dimmed(),
+                    "GEMINI_API_KEY=AI...".cyan()
+                );
+            }
+        }
+        3 => {
+            if env::var("OPENROUTER_API_KEY").is_err() {
+                println!(
+                    "\n  {}\n  {}\n",
+                    "Add your API key to .env:".dimmed(),
+                    "OPENROUTER_API_KEY=sk-or-...".cyan()
+                );
+            }
+        }
+        _ => {}
+    }
+}
+
 // ── AI provider selection ────────────────────────────────────────────
 fn get_ai_response(prompt: &str) -> Option<(String, String)> {
-    // 1. Try Ollama (local)
-    // if let Some(answer) = try_ollama(prompt) {
-    //     return Some((answer, "Ollama".to_string()));
-    // }
+    let provider = env::var("WTH_PROVIDER")
+        .unwrap_or_default()
+        .to_lowercase();
 
-    // // 2. Try OpenAI
-    // if let Some(answer) = try_openai(prompt) {
-    //     return Some((answer, "OpenAI".to_string()));
-    // }
-
-    // 3. Try Gemini
-    if let Some(answer) = try_gemini(prompt) {
-        return Some((answer, "Gemini".to_string()));
+    // If a provider is explicitly configured, use only that one
+    match provider.as_str() {
+        "ollama" => {
+            if let Some(answer) = try_ollama(prompt) {
+                return Some((answer, "Ollama".to_string()));
+            }
+            eprintln!(
+                "\n{}",
+                "✖ Ollama failed. Is it running? Try: ollama serve".red()
+            );
+            return None;
+        }
+        "openai" => {
+            if let Some(answer) = try_openai(prompt) {
+                return Some((answer, "OpenAI".to_string()));
+            }
+            eprintln!(
+                "\n{}",
+                "✖ OpenAI failed. Check your OPENAI_API_KEY in .env".red()
+            );
+            return None;
+        }
+        "gemini" => {
+            if let Some(answer) = try_gemini(prompt) {
+                return Some((answer, "Gemini".to_string()));
+            }
+            eprintln!(
+                "\n{}",
+                "✖ Gemini failed. Check your GEMINI_API_KEY in .env".red()
+            );
+            return None;
+        }
+        "openrouter" => {
+            if let Some(answer) = try_openrouter(prompt) {
+                return Some((answer, "OpenRouter".to_string()));
+            }
+            eprintln!(
+                "\n{}",
+                "✖ OpenRouter failed. Check your OPENROUTER_API_KEY in .env".red()
+            );
+            return None;
+        }
+        _ => {
+            // No provider configured – try all in order (auto-detect)
+            if let Some(answer) = try_ollama(prompt) {
+                return Some((answer, "Ollama".to_string()));
+            }
+            if let Some(answer) = try_openai(prompt) {
+                return Some((answer, "OpenAI".to_string()));
+            }
+            if let Some(answer) = try_gemini(prompt) {
+                return Some((answer, "Gemini".to_string()));
+            }
+            if let Some(answer) = try_openrouter(prompt) {
+                return Some((answer, "OpenRouter".to_string()));
+            }
+        }
     }
 
-    // 4. Fallback: OpenRouter
-    if let Some(answer) = try_openrouter(prompt) {
-        return Some((answer, "OpenRouter".to_string()));
-    }
-
-    // 5. No provider available
+    // No provider available
     println!(
-        "\n{}\n\n  {}\n  Install from {} then run:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n",
+        "\n{}\n\n  {}\n\n  {}\n  Install from {} then run:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n\n  {}\n  Create a {} file with:\n  {}\n",
         "✖ No AI provider available.".red(),
+        "Run 'wth --setup' to configure a provider.".bold().cyan(),
         "Option 1 – Ollama (local, free, private)".bold(),
         "https://ollama.com".underline(),
         "ollama pull qwen3.5:4b".cyan(),
