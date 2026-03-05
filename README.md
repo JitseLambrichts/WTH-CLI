@@ -2,8 +2,6 @@
 
 `wth-cli` is a command-line interface wrapper that seamlessly runs your terminal commands and, if they fail, intercepts the error output to provide an AI-generated solution on the spot. It supports local models via **Ollama**, as well as cloud-based ones via **OpenAI** or **OpenRouter**.
 
-Written in blazingly fast Rust.
-
 ## Features
 
 - **Seamless wrapping**: Just prepend `wth` to your command. If it works, you get your normal output. If it fails, the AI jumps in.
@@ -28,10 +26,28 @@ Written in blazingly fast Rust.
    ```
 
 2. Install the binary using Cargo:
+
    ```bash
    cargo install --path .
    ```
-   _Make sure `~/.cargo/bin` is in your system's `PATH`._
+
+3. Ensure the Cargo bin directory is in your system's `PATH`. You can copy these commands exactly; your shell will automatically expand variables like `$HOME` or `$env:USERPROFILE`.
+
+   **Linux / macOS (Bash/Zsh):**
+
+   ```bash
+   export PATH="$HOME/.cargo/bin:$PATH"
+   ```
+
+   _Add this to your `~/.bashrc` or `~/.zshrc` to make it permanent._
+
+   **Windows (PowerShell):**
+
+   ```powershell
+   $env:Path += ";$env:USERPROFILE\.cargo\bin"
+   ```
+
+   _To make this permanent, add it to your [PowerShell Profile](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles) or use the 'Environment Variables' GUI._
 
 ## Updating
 
