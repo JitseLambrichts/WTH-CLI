@@ -1,5 +1,11 @@
 # WTH-CLI (What The Heck CLI)
 
+![Rust](https://img.shields.io/badge/language-Rust-orange)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Stars](https://img.shields.io/github/stars/JitseLambrichts/WTH-CLI)
+![Issues](https://img.shields.io/github/issues/JitseLambrichts/WTH-CLI)
+![Last Commit](https://img.shields.io/github/last-commit/JitseLambrichts/WTH-CLI)
+
 `wth-cli` is a command-line interface wrapper that seamlessly runs your terminal commands and, if they fail, intercepts the error output to provide an AI-generated solution on the spot. It supports local models via **Ollama**, as well as cloud-based ones via **OpenAI** or **OpenRouter**.
 
 ## Features
