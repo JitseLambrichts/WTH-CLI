@@ -176,7 +176,9 @@ fn main() {
     spinner.set_message("wth is analyzing the error…".cyan().to_string());
     spinner.enable_steady_tick(std::time::Duration::from_millis(80));
 
-    let prompt = build_prompt(&full_command, &stderr_output);
+    let files = extract_existing_files(&stderr_output);
+    let files_context = read_file_context(&files);
+    let prompt = build_prompt(&full_command, &stderr_output, &files_context);
     let answer = get_ai_response(&prompt);
 
     spinner.finish_and_clear();
@@ -196,13 +198,84 @@ fn main() {
     std::process::exit(exit_code);
 }
 
+// ── File access for AI context ───────────────────────────────────────
+fn extract_existing_files(stderr: &str) -> Vec<String> {
+    let mut files = std::collections::HashSet::new();
+
+    for token in stderr.split_whitespace() {
+        let token = token.trim_matches(|c: char| {
+            "()[]{}'\"`,".contains(c)
+        });
+
+        let mut candidates = vec![token.to_string()];
+
+        // Handle path:line:col
+        if let Some(idx) = token.find(':') {
+            if idx == 1 && token.len() > 2 && (token.as_bytes()[2] == b'\\' || token.as_bytes()[2] == b'/') {
+                if let Some(second_idx) = token[3..].find(':') {
+                    candidates.push(token[..3 + second_idx].to_string());
+                }
+            } else {
+                candidates.push(token[..idx].to_string());
+            }
+        }
+
+        // Handle path(line,col)
+        if let Some(idx) = token.find('(') {
+            candidates.push(token[..idx].to_string());
+        }
+
+        for candidate in candidates {
+            if !candidate.is_empty() {
+                let path = std::path::Path::new(&candidate);
+                if path.is_file() {
+                    files.insert(candidate);
+                }
+            }
+        }
+    }
+
+    files.into_iter().take(3).collect()
+}
+
+fn read_file_context(files: &[String]) -> String {
+    let mut context = String::new();
+    for file in files {
+        if let Ok(metadata) = std::fs::metadata(file) {
+            if metadata.len() > 1_000_000 {
+                continue;
+            }
+        }
+        if let Ok(content) = std::fs::read_to_string(file) {
+            let lines: Vec<&str> = content.lines().collect();
+            let limited_content = if lines.len() > 250 {
+                let mut c = lines[0..125].join("\n");
+                c.push_str("\n... [content truncated] ...\n");
+                c.push_str(&lines[lines.len() - 125..].join("\n"));
+                c
+            } else {
+                content
+            };
+            
+            context.push_str(&format!("\nFile `{}`:\n```\n{}\n```\n", file, limited_content));
+        }
+    }
+    context
+}
+
 // ── Prompt construction ──────────────────────────────────────────────
-fn build_prompt(cmd: &str, stderr: &str) -> String {
-    let os_type = env::consts::OS;
-    let os_arch = env::consts::ARCH;
-    let shell = env::var("SHELL")
-        .or_else(|_| env::var("COMSPEC"))
+fn build_prompt(cmd: &str, stderr: &str, files_context: &str) -> String {
+    let os_type = std::env::consts::OS;
+    let os_arch = std::env::consts::ARCH;
+    let shell = std::env::var("SHELL")
+        .or_else(|_| std::env::var("COMSPEC"))
         .unwrap_or_else(|_| "unknown".to_string());
+
+    let files_section = if files_context.is_empty() {
+        String::new()
+    } else {
+        format!("\nRelevant file contents:\n{}\n", files_context)
+    };
 
     format!(
         "You are a helpful terminal assistant. A command just failed on this machine.\n\
@@ -214,7 +287,7 @@ fn build_prompt(cmd: &str, stderr: &str) -> String {
          stderr output:\n\
          ```\n\
          {}\n\
-         ```\n\
+         ```\n{}\
          \n\
          Provide a structured output formatted in Markdown, using these exact headings:\n\
          ### What is wrong\n (A short explanation of the cause)\n\
@@ -224,7 +297,8 @@ fn build_prompt(cmd: &str, stderr: &str) -> String {
         os_arch,
         shell,
         cmd,
-        stderr.trim()
+        stderr.trim(),
+        files_section
     )
 }
 
