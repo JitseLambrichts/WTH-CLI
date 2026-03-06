@@ -2,9 +2,12 @@
 name = "wtf-cli"
 version = "1.0.0"
 edition = "2021"
-description = "Run any command. If it fails, AI tells you why and how to fix it."
+authors = ["Jitse Lambrichts <jitse.lambrichts@gmail.com>"]
+description = "AI-powered terminal error interpreter. Prepend wtf to any command to get instant diagnoses and fixes."
 license = "MIT"
+readme = "README.md"
 keywords = ["cli", "terminal", "error", "ai", "fix", "debug", "ollama", "developer-tools"]
+categories = ["command-line-utilities", "development-tools"]
 
 [[bin]]
 name = "wtf"
