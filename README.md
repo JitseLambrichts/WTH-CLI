@@ -130,6 +130,12 @@ OPENROUTER_API_KEY=your_openrouter_key_here
 OPENROUTER_MODEL=arcee-ai/trinity-mini:free
 ```
 
+## Demo
+<video src="https://github.com/user-attachments/assets/04c37c5a-e0f8-4287-ac59-6304b995f947" controls width="600">
+  Je browser ondersteunt geen video.
+</video>
+
+
 ## License
 
 MIT
