@@ -1,7 +1,7 @@
-# WTF-CLI (What The Fix CLI)
-
+# WTF-CLI (What The Fix CLI) 
 
 ![Rust](https://img.shields.io/badge/language-Rust-orange)
+![Crates.io](https://img.shields.io/crates/v/wtf-cli)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Issues](https://img.shields.io/github/issues/JitseLambrichts/WTF-CLI)
 ![Last Commit](https://img.shields.io/github/last-commit/JitseLambrichts/WTF-CLI)
@@ -26,6 +26,12 @@
 - Optional (but recommended): [Ollama](https://ollama.com/) running locally for free, private AI analysis.
 
 ## Installation
+
+### From crates.io (Recommended)
+
+```bash
+cargo install wtf-cli
+```
 
 ### From Source
 
@@ -67,6 +73,14 @@
    ```
 
 ## Updating
+
+To update to the latest version, simply run:
+
+```bash
+cargo install wtf-cli
+```
+
+### From Source (Manual)
 
 If you've installed `wtf-cli` from source and want to pull the latest changes:
 
@@ -134,10 +148,10 @@ OPENROUTER_MODEL=arcee-ai/trinity-mini:free
 ```
 
 ## Demo
-<video src="https://github.com/user-attachments/assets/04c37c5a-e0f8-4287-ac59-6304b995f947" controls width="600">
-  Je browser ondersteunt geen video.
-</video>
 
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/95b84377-350c-4c65-981d-43f714725ad9"/>
+<p>
 
 ## License
 

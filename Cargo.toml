@@ -1,6 +1,6 @@
 [package]
 name = "wtf-cli"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["Jitse Lambrichts <jitse.lambrichts@gmail.com>"]
 description = "AI-powered terminal error interpreter. Prepend wtf to any command to get instant diagnoses and fixes."
